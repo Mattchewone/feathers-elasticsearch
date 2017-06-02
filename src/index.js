@@ -3,7 +3,7 @@
 import errors from 'feathers-errors';
 import makeDebug from 'debug';
 
-import { filter, removeProps, parseQuery, mapGet, mapFind, mapBulk } from './utils';
+import { filter, removeProps, parseQuery, parseAggs, mapGet, mapFind, mapBulk } from './utils';
 import Proto from 'uberproto';
 
 const debug = makeDebug('feathers-elasticsearch');
@@ -118,7 +118,9 @@ class Service {
 function find (service, params) {
   let paginate = params.paginate !== undefined ? params.paginate : service.paginate;
   let { filters, query } = filter(params.query, paginate);
-  let esQuery = parseQuery(query, service.id);
+  let esQuery = parseQuery(removeProps(query, '$aggs'), service.id);
+  let esAggs = parseAggs(query);
+
   let findParams = Object.assign(
     {
       _source: filters.$select,
@@ -126,7 +128,8 @@ function find (service, params) {
       size: filters.$limit,
       sort: filters.$sort,
       body: {
-        query: esQuery ? { bool: esQuery } : undefined
+        query: esQuery ? { bool: esQuery } : undefined,
+        aggs: esAggs || undefined
       }
     },
     service.esParams

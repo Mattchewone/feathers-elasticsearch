@@ -4,6 +4,7 @@ import feathersFilter from 'feathers-query-filters';
 
 import { removeProps } from './core';
 import { parseQuery } from './parse-query';
+import { parseAggs } from './parse-aggs';
 
 function filter (query = {}, paginate = {}) {
   let result = feathersFilter(query, paginate);
@@ -27,13 +28,17 @@ function filter (query = {}, paginate = {}) {
 function mapFind (results, idProp, metaProp, filters, hasPagination) {
   let data = results.hits.hits
     .map(result => mapGet(result, idProp, metaProp));
+  let aggs = Object.keys(results.aggregations || [])
+    .map(data => mapAggs(data, results))
+    .reduce((acc, cur) => reduceAggs(acc, cur), {});
 
   if (hasPagination) {
     return {
       total: results.hits.total,
       skip: filters.$skip,
       limit: filters.$limit,
-      data
+      data,
+      aggs
     };
   }
 
@@ -42,6 +47,16 @@ function mapFind (results, idProp, metaProp, filters, hasPagination) {
 
 function mapGet (item, idProp, metaProp) {
   return mapItem(item, idProp, metaProp);
+}
+
+function mapAggs (item, results) {
+  return { [item]: results.aggregations[item].buckets };
+}
+
+function reduceAggs (acc, cur) {
+  let key = Object.keys(cur)[0];
+  acc[key] = cur[key];
+  return acc;
 }
 
 function mapPatch (item, idProp, metaProp) {
@@ -78,6 +93,7 @@ export {
   filter,
   removeProps,
   parseQuery,
+  parseAggs,
   mapFind,
   mapGet,
   mapPatch,

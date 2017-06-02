@@ -171,6 +171,27 @@ describe('Elasticsearch Service', () => {
           });
       });
 
+      it('should return aggregrations', () => {
+        return app.service(serviceName)
+          .find({
+            query: {
+              tags: ['javascript'],
+              $aggs: [{
+                tags_agg: {
+                  $term: 'tags'
+                }
+              }]
+            },
+            paginate: { default: 10 }
+          })
+          .then(results => {
+            expect(results.data).to.be.an('array').and.not.be.empty;
+            expect(results.aggs).to.not.be.undefined;
+            expect(results.aggs.tags_agg).to.not.be.undefined;
+            expect(results.aggs.tags_agg.length).to.equal(3);
+          });
+      });
+
       describe('special filters', () => {
         it('can $prefix', () => {
           return app.service(serviceName)

@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 import { filter, mapFind, mapGet, mapPatch, mapBulk } from '../../src/utils';
 import parseQueryTests from './parse-query.js';
+import parseAggsTests from './parse-aggs.js';
 import coreUtilsTests from './core.js';
 
 describe('Elasticsearch utils', () => {
@@ -146,7 +147,8 @@ describe('Elasticsearch utils', () => {
         total: 2,
         skip: filters.$skip,
         limit: filters.$limit,
-        data: mappedResults
+        data: mappedResults,
+        aggs: {}
       };
 
       expect(mapFind(sourceResults, '_id', '_meta', filters, true)).to
@@ -286,5 +288,6 @@ describe('Elasticsearch utils', () => {
   });
 
   parseQueryTests();
+  parseAggsTests();
   coreUtilsTests();
 });
